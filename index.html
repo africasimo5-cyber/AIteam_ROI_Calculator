@@ -24,15 +24,17 @@
     .small { font-weight:400; color:#333; font-size:14px; }
     .muted { font-weight:400; color:#666; font-size:13px; }
     @media (max-width:720px) {
+      h1 { font-size:32px; color:#0b3d91; margin-bottom:8px; text-align: center;}
+      p.lead { font-size:16px; color:#333; margin-top:0; text-align: center;}
       .grid { grid-template-columns:1fr; }
-      header { flex-direction:column; gap:12px; align-items:flex-start; }
+      header { flex-direction:column; gap:12px; align-items:center; }
     }
   </style>
 </head>
 <body>
   <header>
-    <img src="aiteam-logo.png" alt="AI1team" style="height:70px;">
-    <div style="font-size:14px; color:#0b3d91;">AI rešenja za pametniji e-commerce</div>
+    <img class="logo" src="aiteam-logo.png" alt="AI1team" style="height:70px;">
+    <div class="logo-text" style="font-size:14px; color:#0b3d91;">AI rešenja za pametniji e-commerce</div>
   </header>
 
   <div class="wrap">
@@ -308,5 +310,6 @@
 </body>
 
 </html>
+
 
 
