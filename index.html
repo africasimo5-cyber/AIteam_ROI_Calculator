@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI1team — ROI Kalkulator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; margin:0; color:#111; background:#fff; }
+    header { display:flex; justify-content:space-between; align-items:center; padding:20px 32px; border-bottom:2px solid #f3f3f3; }
+    h1 { font-size:32px; color:#0b3d91; margin-bottom:8px; }
+    p.lead { font-size:18px; color:#333; margin-top:0; }
+    .wrap { max-width:960px; margin:40px auto; padding:0 16px; }
+    .btn { background:#d4af37; color:#fff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; cursor:pointer; }
+    .btn:hover { background:#b38e1e; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    input, select { width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
+    label { font-size:14px; font-weight:600; display:block; margin-bottom:6px; }
+    .card { border:1px solid #ddd; border-radius:10px; padding:20px; margin-top:24px; }
+    footer { text-align:center; margin:60px 0 24px; font-size:13px; color:#444; }
+    footer img { height:28px; margin-top:12px; }
+    .results { margin-top:18px; padding:14px; border-radius:8px; background:#f7f9fb; border:1px solid #e6eef8; }
+    .result-row { display:flex; justify-content:space-between; padding:6px 0; font-weight:600; color:#0b3d91; }
+    .small { font-weight:400; color:#333; font-size:14px; }
+    .muted { font-weight:400; color:#666; font-size:13px; }
+    @media (max-width:720px) {
+      .grid { grid-template-columns:1fr; }
+      header { flex-direction:column; gap:12px; align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="aiteam-logo.png" alt="AI1team" style="height:70px;">
+    <div style="font-size:14px; color:#0b3d91;">AI rešenja za pametniji e-commerce</div>
+  </header>
+
+  <div class="wrap">
+    <section id="hero">
+      <h1>Koliko AI može smanjiti vaše zalihe?</h1>
+      <p class="lead">Unesite svoje brojke i za 30 sekundi saznajte potencijalnu godišnju uštedu i ROI.</p>
+    </section>
+
+    <form id="roiForm" class="card" onsubmit="return submitToBackend(event)">
+      <h2>Podaci o kompaniji</h2>
+      <div class="grid">
+        <div>
+          <label>Naziv kompanije</label>
+          <input name="company" id="company" required>
+        </div>
+        <div>
+          <label>Kontakt osoba</label>
+          <input name="contact" id="contact" required>
+        </div>
+        <div>
+          <label>Email</label>
+          <input type="email" name="email" id="email" required>
+        </div>
+      </div>
+
+      <h2 style="margin-top:18px;">Operativni podaci</h2>
+      <div class="grid">
+        <div>
+          <label>Godišnji prihod €</label>
+          <input type="number" name="annualRevenue" id="annualRevenue" min="0" step="0.01" required>
+        </div>
+        <div>
+          <label>Vrednost zaliha €</label>
+          <input type="number" name="inventoryValue" id="inventoryValue" min="0" step="0.01" required>
+        </div>
+        <div>
+          <label>Overstock %</label>
+          <input type="number" name="overstockPct" id="overstockPct" min="0" max="100" step="0.01" required>
+        </div>
+        <div>
+          <label>Out-of-Stock %</label>
+          <input type="number" name="oosPct" id="oosPct" min="0" max="100" step="0.01" required>
+        </div>
+        <div>
+          <label>Broj artikala SKU</label>
+          <input type="number" name="sku" id="sku" min="0" step="1" required>
+        </div>
+        <div>
+          <label>Broj skladišta</label>
+          <input type="number" name="warehouses" id="warehouses" min="0" step="1" required>
+        </div>
+        <div>
+          <label>Broj prodajnih kanala</label>
+          <input type="number" name="channels" id="channels" min="0" step="1" required>
+        </div>
+        <div>
+          <label>Očekivana AI preciznost %</label>
+          <select name="accuracy" id="accuracy">
+            <option value="70">70</option>
+            <option value="80">80</option>
+            <option value="85" selected>85</option>
+            <option value="90">90</option>
+            <option value="95">95</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <input type="checkbox" id="gdpr" required> <label for="gdpr" style="font-size:13px;" class="small">Slažem se sa obradom podataka radi ROI procene i ponude GDPR</label>
+      </div>
+
+      <div class="results" id="liveResults" aria-live="polite">
+        <div class="result-row"><div class="muted">Procena godišnje uštede</div><div id="aiSavingsDisplay">-</div></div>
+        <div class="result-row"><div class="muted">Mesečna pretplata (procena)</div><div id="monthlyFeeDisplay">-</div></div>
+        <div class="result-row"><div class="muted">Godišnja pretplata</div><div id="annualFeeDisplay">-</div></div>
+        <div class="result-row"><div class="muted">Procena ROI</div><div id="roiDisplay">-</div></div>
+        <div style="margin-top:8px;" class="small">Rezultati se ažuriraju dok menjate polja. Pre slanja, vrednosti će biti uključene u poruci.</div>
+      </div>
+
+      <!-- Hidden values that will be sent to backend -->
+      <input type="hidden" name="_next" id="_next" value="https://ai1team.com/roicalculator/thankyou.html">
+      <input type="hidden" name="estimatedSavings" id="estimatedSavings">
+      <input type="hidden" name="monthlyFee" id="monthlyFee">
+      <input type="hidden" name="annualFee" id="annualFee">
+      <input type="hidden" name="roiPercent" id="roiPercent">
+      <input type="hidden" name="note" id="note">
+
+      <div style="margin-top:16px;">
+        <button type="submit" class="btn">Izračunaj ROI i pošalji</button>
+      </div>
+    </form>
+  </div>
+
+  <footer>
+    AI1team © 2025 — Beograd · <a href="mailto:roi@ai1team.com">roi@ai1team.com</a><br>
+    <img src="logo-bw.png" alt="AI1team">
+  </footer>
+
+  <script>
+    // ---------- Configuration ----------
+    // Choose one backend option:
+    // 1) If you want to use the Google Apps Script endpoint, set appsScriptUrl to your deployed Web App URL below.
+    //    Example: const appsScriptUrl = 'https://script.google.com/macros/s/YOUR_DEPLOY_ID/exec';
+    // 2) If you prefer FormSubmit (quick start), leave appsScriptUrl = '' and set formSubmitEmail to your recipient.
+    const appsScriptUrl = ''; // <-- REPLACE with your Apps Script Web App URL when ready
+    const formSubmitEmail = 'roi@ai1team.com'; // used if appsScriptUrl is empty
+
+    // ---------- Utility functions ----------
+    function parseNum(id) {
+      const el = document.getElementById(id);
+      const v = parseFloat(el.value);
+      return isNaN(v) ? 0 : v;
+    }
+
+    function computeValues() {
+      const annualRevenue = parseNum('annualRevenue');
+      const inventoryValue = parseNum('inventoryValue');
+      const overstockPct = parseNum('overstockPct');
+      const oosPct = parseNum('oosPct');
+      const sku = parseNum('sku');
+      const warehouses = parseNum('warehouses');
+      const channels = parseNum('channels');
+
+      const overstockLoss = inventoryValue * (overstockPct / 100);
+      const oosLoss = annualRevenue * (oosPct / 100);
+
+      // AI recapture assumptions
+      const aiSavings = (overstockLoss * 0.30) + (oosLoss * 0.40);
+
+      // Fee calculation
+      let fee = 1000 + (300 * warehouses) + (200 * channels) + (150 * (sku / 1000));
+      if (fee < 3000) fee = 3000;
+
+      const monthlyFee = Math.round(fee);
+      const annualFee = Math.round(fee * 12);
+
+      const roi = (aiSavings - annualFee) / annualFee;
+      const roiPercent = isFinite(roi) ? Math.round(roi * 100 * 100) / 100 : null; // 2 decimals or null
+
+      return {
+        aiSavings: Math.round(aiSavings),
+        monthlyFee,
+        annualFee,
+        roiPercent
+      };
+    }
+
+    function updateLiveDisplay() {
+      const vals = computeValues();
+      document.getElementById('aiSavingsDisplay').textContent = vals.aiSavings.toLocaleString('en-US') + ' €';
+      document.getElementById('monthlyFeeDisplay').textContent = vals.monthlyFee.toLocaleString('en-US') + ' €';
+      document.getElementById('annualFeeDisplay').textContent = vals.annualFee.toLocaleString('en-US') + ' €';
+      document.getElementById('roiDisplay').textContent = (vals.roiPercent !== null ? vals.roiPercent + ' %' : '-');
+    }
+
+    // Wire inputs to live update
+    const inputs = ['annualRevenue','inventoryValue','overstockPct','oosPct','sku','warehouses','channels','accuracy'];
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', updateLiveDisplay);
+    });
+    updateLiveDisplay();
+
+    // ---------- Submission logic ----------
+    function collectFormValues() {
+      const vals = computeValues();
+      // populate hidden fields (visible to FormSubmit or Apps Script)
+      document.getElementById('estimatedSavings').value = vals.aiSavings;
+      document.getElementById('monthlyFee').value = vals.monthlyFee;
+      document.getElementById('annualFee').value = vals.annualFee;
+      document.getElementById('roiPercent').value = vals.roiPercent !== null ? vals.roiPercent : '';
+      document.getElementById('note').value = 'Computed using AI1team formula: 30% overstock recapture; 40% OOS recapture; base fees applied';
+      return {
+        company: document.getElementById('company').value.trim(),
+        contact: document.getElementById('contact').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        annualRevenue: document.getElementById('annualRevenue').value,
+        inventoryValue: document.getElementById('inventoryValue').value,
+        overstockPct: document.getElementById('overstockPct').value,
+        oosPct: document.getElementById('oosPct').value,
+        sku: document.getElementById('sku').value,
+        warehouses: document.getElementById('warehouses').value,
+        channels: document.getElementById('channels').value,
+        accuracy: document.getElementById('accuracy').value,
+        estimatedSavings: vals.aiSavings,
+        monthlyFee: vals.monthlyFee,
+        annualFee: vals.annualFee,
+        roiPercent: vals.roiPercent !== null ? vals.roiPercent : '',
+        note: document.getElementById('note').value
+      };
+    }
+
+    // Simple email validation
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    // Submit handler: tries Apps Script if configured, otherwise falls back to FormSubmit
+    async function submitToBackend(e) {
+      e.preventDefault();
+
+      const data = collectFormValues();
+
+      if (!data.company || !data.email) {
+        alert('Popunite obavezna polja: Naziv kompanije i Email');
+        return false;
+      }
+      if (!isValidEmail(data.email)) {
+        alert('Unesite validnu email adresu');
+        return false;
+      }
+
+      // If appsScriptUrl is set, POST to it using URL-encoded body and then redirect to thankyou
+      if (appsScriptUrl && appsScriptUrl.trim() !== '') {
+        try {
+          const resp = await fetch(appsScriptUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(data)
+          });
+          const json = await resp.json().catch(() => null);
+          if (json && json.status === 'success') {
+            window.location.href = document.getElementById('_next').value;
+            return false;
+          } else {
+            // if script returns non-success, still attempt redirect but warn user
+            alert('Slanje je završeno, ali server je vratio upozorenje. Proverite e-mail za potvrdu.');
+            window.location.href = document.getElementById('_next').value;
+            return false;
+          }
+        } catch (err) {
+          console.error('Apps Script submit error', err);
+          alert('Došlo je do greške pri slanju na server. Pokušajte ponovo ili kontaktirajte nas direktno.');
+          return false;
+        }
+      }
+
+      // Fallback: use FormSubmit.co direct form POST by creating a temporary form and posting it
+      // This avoids replacing the whole page form action; uses formsubmit to send an email to formSubmitEmail
+      if (!formSubmitEmail || formSubmitEmail.trim() === '') {
+        alert('Nije konfigurisana destinacija za prijem. Kontaktirajte administratora.');
+        return false;
+      }
+
+      // create temp form and submit to FormSubmit
+      const tempForm = document.createElement('form');
+      tempForm.method = 'POST';
+      tempForm.action = 'https://formsubmit.co/' + encodeURIComponent(formSubmitEmail);
+      // include _next to redirect to thankyou page after FormSubmit
+      const next = document.createElement('input');
+      next.type = 'hidden'; next.name = '_next'; next.value = document.getElementById('_next').value;
+      tempForm.appendChild(next);
+
+      // append all fields from data
+      Object.keys(data).forEach(key => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = key;
+        inp.value = data[key];
+        tempForm.appendChild(inp);
+      });
+
+      // append niceties: disable captcha if desired via _captcha = false (FormSubmit feature)
+      const captcha = document.createElement('input');
+      captcha.type = 'hidden'; captcha.name = '_captcha'; captcha.value = 'false';
+      tempForm.appendChild(captcha);
+
+      document.body.appendChild(tempForm);
+      tempForm.submit();
+      return false;
+    }
+  </script>
+</body>
+</html>
