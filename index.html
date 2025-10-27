@@ -14,6 +14,7 @@
     .wrap { max-width:960px; margin:40px auto; padding:0 16px; }
     .btn { background:#d4af37; color:#fff; border:none; border-radius:6px; padding:12px 20px; font-weight:600; cursor:pointer; }
     .btn:hover { background:#b38e1e; }
+    .btn:disabled { background:#ccc; cursor:not-allowed; }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     input, select { width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; }
     label { font-size:14px; font-weight:600; display:block; margin-bottom:6px; }
@@ -120,16 +121,12 @@
       </div>
 
       <!-- Hidden values that will be sent to backend -->
-      <input type="hidden" name="_next" id="_next" value="https://ai1team.com/roicalculator/thankyou.html">
+      <input type="hidden" name="_next" id="_next" value="https://ai1team.com/thankyou.html">
       <input type="hidden" name="estimatedSavings" id="estimatedSavings">
       <input type="hidden" name="monthlyFee" id="monthlyFee">
       <input type="hidden" name="annualFee" id="annualFee">
       <input type="hidden" name="roiPercent" id="roiPercent">
       <input type="hidden" name="note" id="note">
-      <input type="hidden" name="estimatedSavings" id="estimatedSavings">
-      <input type="hidden" name="monthlyFee" id="monthlyFee">
-      <input type="hidden" name="annualFee" id="annualFee">
-      <input type="hidden" name="roiPercent" id="roiPercent">
 
       <div style="margin-top:16px;">
         <button type="submit" class="btn">Izračunaj ROI i pošalji</button>
@@ -138,191 +135,140 @@
   </div>
 
   <footer>
-    AI1team © 2025 — Beograd · <a href="mailto:africasimo5@gmail.com">roi@ai1team.com</a><br>
+    AI1team © 2025 — Beograd · <a href="mailto:ninasaramia@gmail.com">ninasaramia@gmail.com</a><br>
     <img src="aiteam-logo.png" alt="AI1team" style="height:45px;">
   </footer>
 
   <script>
-    // ---------- Configuration ----------
-    // Choose one backend option:
-    // 1) If you want to use the Google Apps Script endpoint, set appsScriptUrl to your deployed Web App URL below.
-    //    Example: const appsScriptUrl = 'https://script.google.com/macros/s/YOUR_DEPLOY_ID/exec';
-    // 2) If you prefer FormSubmit (quick start), leave appsScriptUrl = '' and set formSubmitEmail to your recipient.
-    const appsScriptUrl = ''; // <-- REPLACE with your Apps Script Web App URL when ready
-    const formSubmitEmail = 'africasimo5@gmail.com'; // used if appsScriptUrl is empty
+// ---------- Utility functions ----------
+function cleanNumber(value) {
+  return parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+}
 
-    // ---------- Utility functions ----------
-    function parseNum(id) {
-      const el = document.getElementById(id);
-      const v = parseFloat(el.value);
-      return isNaN(v) ? 0 : v;
+function formatCurrency(value) {
+  return value.toLocaleString('de-DE');
+}
+
+function computeValues() {
+  const annualRevenue = cleanNumber(document.getElementById('annualRevenue').value);
+  const inventoryValue = cleanNumber(document.getElementById('inventoryValue').value);
+  const overstockPct = parseFloat(document.getElementById('overstockPct').value) || 0;
+  const oosPct = parseFloat(document.getElementById('oosPct').value) || 0;
+  const sku = parseFloat(document.getElementById('sku').value) || 0;
+  const warehouses = parseFloat(document.getElementById('warehouses').value) || 0;
+  const channels = parseFloat(document.getElementById('channels').value) || 0;
+
+  const overstockLoss = inventoryValue * (overstockPct / 100);
+  const oosLoss = annualRevenue * (oosPct / 100);
+  const aiSavings = (overstockLoss * 0.30) + (oosLoss * 0.40);
+
+  let fee = 1000 + (300 * warehouses) + (200 * channels) + (150 * (sku / 1000));
+  if (fee < 3000) fee = 3000;
+
+  const monthlyFee = Math.round(fee);
+  const annualFee = Math.round(fee * 12);
+  const roi = (aiSavings - annualFee) / annualFee;
+  const roiPercent = isFinite(roi) ? Math.round(roi * 10000) / 100 : null;
+
+  return { aiSavings: Math.round(aiSavings), monthlyFee, annualFee, roiPercent };
+}
+
+function updateLiveDisplay() {
+  const vals = computeValues();
+  document.getElementById('aiSavingsDisplay').textContent = formatCurrency(vals.aiSavings) + ' €';
+  document.getElementById('monthlyFeeDisplay').textContent = formatCurrency(vals.monthlyFee) + ' €';
+  document.getElementById('annualFeeDisplay').textContent = formatCurrency(vals.annualFee) + ' €';
+  document.getElementById('roiDisplay').textContent = vals.roiPercent !== null ? vals.roiPercent + ' %' : '-';
+}
+
+// Currency input formatting
+['annualRevenue', 'inventoryValue'].forEach(id => {
+  const el = document.getElementById(id);
+  el.type = 'text';
+  el.addEventListener('input', () => {
+    let value = el.value.replace(/\D/g, '');
+    if (value) {
+      const numberValue = parseFloat(value);
+      el.value = formatCurrency(numberValue);
+    } else {
+      el.value = '';
     }
-
-    function computeValues() {
-      const annualRevenue = parseNum('annualRevenue');
-      const inventoryValue = parseNum('inventoryValue');
-      const overstockPct = parseNum('overstockPct');
-      const oosPct = parseNum('oosPct');
-      const sku = parseNum('sku');
-      const warehouses = parseNum('warehouses');
-      const channels = parseNum('channels');
-
-      const overstockLoss = inventoryValue * (overstockPct / 100);
-      const oosLoss = annualRevenue * (oosPct / 100);
-
-      // AI recapture assumptions
-      const aiSavings = (overstockLoss * 0.30) + (oosLoss * 0.40);
-
-      // Fee calculation
-      let fee = 1000 + (300 * warehouses) + (200 * channels) + (150 * (sku / 1000));
-      if (fee < 3000) fee = 3000;
-
-      const monthlyFee = Math.round(fee);
-      const annualFee = Math.round(fee * 12);
-
-      const roi = (aiSavings - annualFee) / annualFee;
-      const roiPercent = isFinite(roi) ? Math.round(roi * 100 * 100) / 100 : null; // 2 decimals or null
-
-      return {
-        aiSavings: Math.round(aiSavings),
-        monthlyFee,
-        annualFee,
-        roiPercent
-      };
-    }
-
-    function updateLiveDisplay() {
-      const vals = computeValues();
-      document.getElementById('aiSavingsDisplay').textContent = vals.aiSavings.toLocaleString('en-US') + ' €';
-      document.getElementById('monthlyFeeDisplay').textContent = vals.monthlyFee.toLocaleString('en-US') + ' €';
-      document.getElementById('annualFeeDisplay').textContent = vals.annualFee.toLocaleString('en-US') + ' €';
-      document.getElementById('roiDisplay').textContent = (vals.roiPercent !== null ? vals.roiPercent + ' %' : '-');
-    }
-
-    // Wire inputs to live update
-    const inputs = ['annualRevenue','inventoryValue','overstockPct','oosPct','sku','warehouses','channels','accuracy'];
-    inputs.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('input', updateLiveDisplay);
-    });
     updateLiveDisplay();
+  });
+});
 
-    // ---------- Submission logic ----------
-    function collectFormValues() {
-      const vals = computeValues();
-      // populate hidden fields (visible to FormSubmit or Apps Script)
-      document.getElementById('estimatedSavings').value = vals.aiSavings;
-      document.getElementById('monthlyFee').value = vals.monthlyFee;
-      document.getElementById('annualFee').value = vals.annualFee;
-      document.getElementById('roiPercent').value = vals.roiPercent !== null ? vals.roiPercent : '';
-      document.getElementById('note').value = 'Computed using AI1team formula: 30% overstock recapture; 40% OOS recapture; base fees applied';
-      return {
-        company: document.getElementById('company').value.trim(),
-        contact: document.getElementById('contact').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        annualRevenue: document.getElementById('annualRevenue').value,
-        inventoryValue: document.getElementById('inventoryValue').value,
-        overstockPct: document.getElementById('overstockPct').value,
-        oosPct: document.getElementById('oosPct').value,
-        sku: document.getElementById('sku').value,
-        warehouses: document.getElementById('warehouses').value,
-        channels: document.getElementById('channels').value,
-        accuracy: document.getElementById('accuracy').value,
-        estimatedSavings: vals.aiSavings,
-        monthlyFee: vals.monthlyFee,
-        annualFee: vals.annualFee,
-        roiPercent: vals.roiPercent !== null ? vals.roiPercent : '',
-        note: document.getElementById('note').value
-      };
+const inputs = ['overstockPct','oosPct','sku','warehouses','channels','accuracy'];
+inputs.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateLiveDisplay);
+});
+updateLiveDisplay();
+
+// ---------- Submission logic ----------
+function collectFormValues() {
+  const vals = computeValues();
+  document.getElementById('estimatedSavings').value = vals.aiSavings;
+  document.getElementById('monthlyFee').value = vals.monthlyFee;
+  document.getElementById('annualFee').value = vals.annualFee;
+  document.getElementById('roiPercent').value = vals.roiPercent || '';
+  document.getElementById('note').value = 'Computed using AI1team formula: 30% overstock recapture; 40% OOS recapture; base fees applied';
+
+  return {
+    company: document.getElementById('company').value.trim(),
+    contact: document.getElementById('contact').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    annualRevenue: document.getElementById('annualRevenue').value + ' €',
+    inventoryValue: document.getElementById('inventoryValue').value + ' €',
+    overstockPct: document.getElementById('overstockPct').value + ' %',
+    oosPct: document.getElementById('oosPct').value + ' %',
+    sku: formatCurrency(parseFloat(document.getElementById('sku').value) || 0),
+    warehouses: formatCurrency(parseFloat(document.getElementById('warehouses').value) || 0),
+    channels: formatCurrency(parseFloat(document.getElementById('channels').value) || 0),
+    accuracy: document.getElementById('accuracy').value + ' %',
+    estimatedSavings: formatCurrency(vals.aiSavings) + ' €',
+    monthlyFee: formatCurrency(vals.monthlyFee) + ' €',
+    annualFee: formatCurrency(vals.annualFee) + ' €',
+    roiPercent: vals.roiPercent !== null ? vals.roiPercent + ' %' : '-',
+    note: document.getElementById('note').value
+  };
+}
+
+async function submitToBackend(e) {
+  e.preventDefault();
+  const data = collectFormValues();
+
+  if (!data.company || !data.email) {
+    alert('Popunite obavezna polja: Naziv kompanije i Email');
+    return false;
+  }
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Šalje se...';
+
+  try {
+    const resp = await fetch('https://formspree.io/f/xpwowped', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (resp.ok) {
+      window.location.href = document.getElementById('_next').value;
+    } else {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+      alert('Došlo je do greške pri slanju. Pokušajte ponovo.');
     }
+  } catch (err) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+    alert('Greška u konekciji. Pokušajte ponovo.');
+  }
+}
+</script>
 
-    // Simple email validation
-    function isValidEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
 
-    // Submit handler: tries Apps Script if configured, otherwise falls back to FormSubmit
-    async function submitToBackend(e) {
-      e.preventDefault();
 
-      const data = collectFormValues();
-
-      if (!data.company || !data.email) {
-        alert('Popunite obavezna polja: Naziv kompanije i Email');
-        return false;
-      }
-      if (!isValidEmail(data.email)) {
-        alert('Unesite validnu email adresu');
-        return false;
-      }
-
-      // If appsScriptUrl is set, POST to it using URL-encoded body and then redirect to thankyou
-      if (appsScriptUrl && appsScriptUrl.trim() !== '') {
-        try {
-          const resp = await fetch(appsScriptUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams(data)
-          });
-          const json = await resp.json().catch(() => null);
-          if (json && json.status === 'success') {
-            window.location.href = document.getElementById('_next').value;
-            return false;
-          } else {
-            // if script returns non-success, still attempt redirect but warn user
-            alert('Slanje je završeno, ali server je vratio upozorenje. Proverite e-mail za potvrdu.');
-            window.location.href = document.getElementById('_next').value;
-            return false;
-          }
-        } catch (err) {
-          console.error('Apps Script submit error', err);
-          alert('Došlo je do greške pri slanju na server. Pokušajte ponovo ili kontaktirajte nas direktno.');
-          return false;
-        }
-      }
-
-      // Fallback: use FormSubmit.co direct form POST by creating a temporary form and posting it
-      // This avoids replacing the whole page form action; uses formsubmit to send an email to formSubmitEmail
-      if (!formSubmitEmail || formSubmitEmail.trim() === '') {
-        alert('Nije konfigurisana destinacija za prijem. Kontaktirajte administratora.');
-        return false;
-      }
-
-      // create temp form and submit to FormSubmit
-      const tempForm = document.createElement('form');
-      tempForm.method = 'POST';
-      tempForm.action = 'https://formsubmit.co/' + encodeURIComponent(formSubmitEmail);
-      // include _next to redirect to thankyou page after FormSubmit
-      const next = document.createElement('input');
-      next.type = 'hidden'; next.name = '_next'; next.value = document.getElementById('_next').value;
-      tempForm.appendChild(next);
-
-      // append all fields from data
-      Object.keys(data).forEach(key => {
-        const inp = document.createElement('input');
-        inp.type = 'hidden';
-        inp.name = key;
-        inp.value = data[key];
-        tempForm.appendChild(inp);
-      });
-
-      // append niceties: disable captcha if desired via _captcha = false (FormSubmit feature)
-      const captcha = document.createElement('input');
-      captcha.type = 'hidden'; captcha.name = '_captcha'; captcha.value = 'false';
-      tempForm.appendChild(captcha);
-
-      document.body.appendChild(tempForm);
-      tempForm.submit();
-      return false;
-    }
-  </script>
 </body>
-
 </html>
-
-
-
-
-
-
-
