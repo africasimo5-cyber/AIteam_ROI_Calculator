@@ -88,11 +88,11 @@
           <input type="number" name="inventoryValue" id="inventoryValue" min="0" step="0.01" required>
         </div>
         <div>
-          <label>mrtvih zaliha (dead stock) %</label>
+          <label>Mrtvih zaliha (dead stock) %</label>
           <input type="number" name="overstockPct" id="overstockPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
-          <label>nedostupnih artikala (out-of-stock) %</label>
+          <label>Nedostupnih artikala (out-of-stock) %</label>
           <input type="number" name="oosPct" id="oosPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
@@ -148,12 +148,8 @@
         <div class="result-row"><div class="muted">Procena godišnje uštede</div><div id="aiSavingsDisplay">-</div></div>
         <div class="result-row"><div class="muted">Mesečna pretplata (procena)</div><div id="monthlyFeeDisplay">-</div></div>
         <div class="result-row"><div class="muted">Godišnja pretplata</div><div id="annualFeeDisplay">-</div></div>
-        <!-- <div class="result-row"><div class="muted">Procena ROI</div><div id="roiDisplay">-</div></div>
-        <div class="result-row"><div class="muted">Odnos zaliha i prihoda</div><div id="invToRevDisplay">-</div></div>
-        <div class="result-row"><div class="muted">Procena mrtve zalihe</div><div id="deadStockDisplay">-</div></div>
-        <div class="result-row"><div class="muted">Signal za prekomerne zalihe</div><div id="overstockSignalDisplay">-</div></div>
-        <div class="result-row"><div class="muted">OOS signal</div><div id="oosSignalDisplay">-</div></div> -->
-        <div class="result-row"><div class="muted">Iskorišćenost zaliha</div><div id="inventoryUtilDisplay">-</div></div>
+        <div class="result-row"><div class="muted">Procena ROI</div><div id="roiDisplay">-</div></div>
+        <!-- REMOVED FROM DISPLAY BUT STILL SENT IN EMAIL: Odnos zaliha i prihoda, Procena mrtve zalihe, Signal za prekomerne zalihe, OOS signal, Iskorišćenost zaliha -->
         
         <div style="margin-top:8px;" class="small">Rezultati se ažuriraju dok menjate polja. Pre slanja, vrednosti će biti uključene u poruci.</div>
       </div>
@@ -275,15 +271,15 @@ function computeValues() {
   const monthlyFee = Math.round(fee);
   const annualFee = Math.round(fee * 12);
   const roiEuro = aiSavings - annualFee;
-  const roi = roiEuro / annualFee;
-  const roiPercent = isFinite(roi) ? Math.round(roi * 10000) / 100 : null;
+  const roi = annualFee > 0 ? roiEuro / annualFee : 0;
+  const roiPercent = isFinite(roi) && annualFee > 0 ? Math.round(roi * 10000) / 100 : 0;
 
   // Additional metrics
   const invToRev = (healthData.invToRev * 100).toFixed(1);
   const deadStock = Math.round(inventoryValue * (overstockPct / 100) * 0.25); // Estimate 25% of overstock as dead
   const overstockSignal = overstockPct > 12 ? 'Visok' : overstockPct > 8 ? 'Umeren' : 'Nizak';
   const oosSignal = oosPct > 7 ? 'Visok' : oosPct > 4 ? 'Umeren' : 'Nizak';
-  const inventoryUtil = Math.round((1 - (overstockPct / 100)) * 100);
+  const inventoryUtil = Math.round((1 - (overstockPct / 100)) * 100); // STILL CALCULATED - just not displayed
 
   return { 
     healthScore: healthData.score,
@@ -299,7 +295,7 @@ function computeValues() {
     deadStock,
     overstockSignal,
     oosSignal,
-    inventoryUtil
+    inventoryUtil  // STILL RETURNED - will be sent in email
   };
 }
 
@@ -317,12 +313,8 @@ function updateLiveDisplay() {
   document.getElementById('aiSavingsDisplay').textContent = formatCurrency(vals.aiSavings) + ' €';
   document.getElementById('monthlyFeeDisplay').textContent = formatCurrency(vals.monthlyFee) + ' €';
   document.getElementById('annualFeeDisplay').textContent = formatCurrency(vals.annualFee) + ' €';
-  document.getElementById('roiDisplay').textContent = vals.roiPercent !== null ? vals.roiPercent + ' %' : '-';
-  document.getElementById('invToRevDisplay').textContent = vals.invToRev + ' %';
-  document.getElementById('deadStockDisplay').textContent = formatCurrency(vals.deadStock) + ' €';
-  document.getElementById('overstockSignalDisplay').textContent = vals.overstockSignal;
-  document.getElementById('oosSignalDisplay').textContent = vals.oosSignal;
-  document.getElementById('inventoryUtilDisplay').textContent = vals.inventoryUtil + ' %';
+  document.getElementById('roiDisplay').textContent = vals.roiPercent + ' %';
+  // REMOVED FROM DISPLAY but still calculated and sent in email: Inventory to Revenue, Dead Stock, Overstock Signal, OOS Signal, Inventory Utilization
 }
 
 // Currency input formatting
@@ -364,7 +356,7 @@ function collectFormValues() {
   document.getElementById('deadStock').value = vals.deadStock;
   document.getElementById('overstockSignal').value = vals.overstockSignal;
   document.getElementById('oosSignal').value = vals.oosSignal;
-  document.getElementById('inventoryUtilization').value = vals.inventoryUtil + '%';
+  document.getElementById('inventoryUtilization').value = vals.inventoryUtil + '%'; // STILL SENT IN EMAIL
   document.getElementById('note').value = 'AI1team ROI+ Calculator: Health Score computed with inventory optimization analysis';
 
   return {
@@ -394,7 +386,7 @@ function collectFormValues() {
     deadStock: formatCurrency(vals.deadStock) + ' €',
     overstockSignal: vals.overstockSignal,
     oosSignal: vals.oosSignal,
-    inventoryUtilization: vals.inventoryUtil + ' %',
+    inventoryUtilization: vals.inventoryUtil + ' %', // STILL INCLUDED IN EMAIL DATA
     strategyCall: 'Requested',
     poc: 'Interested',
     note: document.getElementById('note').value
@@ -438,4 +430,3 @@ async function submitToBackend(e) {
 
 </body>
 </html>
-
