@@ -50,7 +50,7 @@
 </head>
 <body>
   <header>
-    <img class="logo" src="aiteam-logo.png" alt="AI1team" style="height:70px;">
+    <img class="logo" src="ai1team-logo.png" alt="AI1team" style="height:70px;">
     <div class="logo-text" style="font-size:14px; color:#0b3d91;">AI rešenja za pametniji e-commerce</div>
   </header>
 
@@ -88,28 +88,28 @@
           <input type="number" name="inventoryValue" id="inventoryValue" min="0" step="0.01" required>
         </div>
         <div>
-          <label>mrtvih zaliha %</label>
+          <label>mrtvih zaliha (dead stock) %</label>
           <input type="number" name="overstockPct" id="overstockPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
-          <label>Оут оф стоцк (dostupnih artikala) %</label>
+          <label>nedostupnih artikala (out-of-stock) %</label>
           <input type="number" name="oosPct" id="oosPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
           <label>COGS %</label>
-          <input type="number" name="cogsPct" id="cogsPct" min="0" max="100" step="0.01" value="55" required>
+          <input type="number" name="cogsPct" id="cogsPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
           <label>Marketing %</label>
-          <input type="number" name="marketingPct" id="marketingPct" min="0" max="100" step="0.01" value="8" required>
+          <input type="number" name="marketingPct" id="marketingPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
           <label>Logistika %</label>
-          <input type="number" name="logisticsPct" id="logisticsPct" min="0" max="100" step="0.01" value="5" required>
+          <input type="number" name="logisticsPct" id="logisticsPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
           <label>Operativa %</label>
-          <input type="number" name="operationsPct" id="operationsPct" min="0" max="100" step="0.01" value="12" required>
+          <input type="number" name="operationsPct" id="operationsPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
           <label>Broj artikala SKU</label>
@@ -148,11 +148,11 @@
         <div class="result-row"><div class="muted">Procena godišnje uštede</div><div id="aiSavingsDisplay">-</div></div>
         <div class="result-row"><div class="muted">Mesečna pretplata (procena)</div><div id="monthlyFeeDisplay">-</div></div>
         <div class="result-row"><div class="muted">Godišnja pretplata</div><div id="annualFeeDisplay">-</div></div>
-        <div class="result-row"><div class="muted">Procena ROI</div><div id="roiDisplay">-</div></div>
+        <!-- <div class="result-row"><div class="muted">Procena ROI</div><div id="roiDisplay">-</div></div>
         <div class="result-row"><div class="muted">Odnos zaliha i prihoda</div><div id="invToRevDisplay">-</div></div>
         <div class="result-row"><div class="muted">Procena mrtve zalihe</div><div id="deadStockDisplay">-</div></div>
         <div class="result-row"><div class="muted">Signal za prekomerne zalihe</div><div id="overstockSignalDisplay">-</div></div>
-        <div class="result-row"><div class="muted">OOS signal</div><div id="oosSignalDisplay">-</div></div>
+        <div class="result-row"><div class="muted">OOS signal</div><div id="oosSignalDisplay">-</div></div> -->
         <div class="result-row"><div class="muted">Iskorišćenost zaliha</div><div id="inventoryUtilDisplay">-</div></div>
         
         <div style="margin-top:8px;" class="small">Rezultati se ažuriraju dok menjate polja. Pre slanja, vrednosti će biti uključene u poruci.</div>
@@ -184,7 +184,7 @@
 
   <footer>
     AI1team © 2025 — Beograd · <a href="mailto:roi@ai1team.com">roi@ai1team.com</a><br>
-    <img src="aiteam-logo.png" alt="AI1team" style="height:45px;">
+    <img src="ai1team-logo.png" alt="AI1team" style="height:45px;">
   </footer>
 
   <script>
@@ -438,5 +438,3 @@ async function submitToBackend(e) {
 
 </body>
 </html>
-
-
