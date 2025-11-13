@@ -26,6 +26,20 @@
     .small { font-weight:400; color:#333; font-size:14px; }
     .muted { font-weight:400; color:#666; font-size:13px; }
     .checkbox { display:inline-block; align-items:center; gap: 10px; }
+    .health-score-badge { 
+      display:inline-block; 
+      padding:10px 16px; 
+      border-radius:8px; 
+      font-size:18px; 
+      font-weight:700; 
+      color:#fff; 
+      margin:12px 0;
+      text-align:center;
+    }
+    .health-good { background:#1b8f3f; }
+    .health-mid { background:#d18b00; }
+    .health-bad { background:#c73535; }
+    .health-hint { font-size:13px; color:#666; margin-top:4px; }
     @media (max-width:720px) {
       h1 { font-size:28px; color:#0b3d91; margin-bottom:8px; text-align: center;}
       p.lead { font-size:16px; color:#333; margin-top:0; text-align: center;}
@@ -36,14 +50,14 @@
 </head>
 <body>
   <header>
-    <img class="logo" src="aiteam-logo.png" alt="AI1team" style="height:70px;">
+    <img class="logo" src="ai1team-logo.png" alt="AI1team" style="height:70px;">
     <div class="logo-text" style="font-size:14px; color:#0b3d91;">AI rešenja za pametniji e-commerce</div>
   </header>
 
   <div class="wrap">
     <section id="hero">
       <h1>Koliko AI može smanjiti vaše zalihe?</h1>
-      <p class="lead">Unesite svoje brojke i za 30 sekundi saznajte potencijalnu godišnju uštedu i ROI.</p>
+      <p class="lead">Unesite svoje brojke i za 30 sekundi saznajte potencijalnu godišnju uštedu, ROI i Health Score vašeg poslovanja.</p>
     </section>
 
     <form id="roiForm" class="card" onsubmit="return submitToBackend(event)">
@@ -74,12 +88,28 @@
           <input type="number" name="inventoryValue" id="inventoryValue" min="0" step="0.01" required>
         </div>
         <div>
-          <label>Overstock %</label>
+          <label>mrtvih zaliha %</label>
           <input type="number" name="overstockPct" id="overstockPct" min="0" max="100" step="0.01" required>
         </div>
         <div>
-          <label>Out-of-Stock %</label>
+          <label>Оут оф стоцк (dostupnih artikala) %</label>
           <input type="number" name="oosPct" id="oosPct" min="0" max="100" step="0.01" required>
+        </div>
+        <div>
+          <label>COGS %</label>
+          <input type="number" name="cogsPct" id="cogsPct" min="0" max="100" step="0.01" value="55" required>
+        </div>
+        <div>
+          <label>Marketing %</label>
+          <input type="number" name="marketingPct" id="marketingPct" min="0" max="100" step="0.01" value="8" required>
+        </div>
+        <div>
+          <label>Logistika %</label>
+          <input type="number" name="logisticsPct" id="logisticsPct" min="0" max="100" step="0.01" value="5" required>
+        </div>
+        <div>
+          <label>Operativa %</label>
+          <input type="number" name="operationsPct" id="operationsPct" min="0" max="100" step="0.01" value="12" required>
         </div>
         <div>
           <label>Broj artikala SKU</label>
@@ -113,19 +143,37 @@
       </div>
 
       <div class="results" id="liveResults" aria-live="polite">
+        <div id="healthScoreDisplay" style="text-align:center;"></div>
+        
         <div class="result-row"><div class="muted">Procena godišnje uštede</div><div id="aiSavingsDisplay">-</div></div>
         <div class="result-row"><div class="muted">Mesečna pretplata (procena)</div><div id="monthlyFeeDisplay">-</div></div>
         <div class="result-row"><div class="muted">Godišnja pretplata</div><div id="annualFeeDisplay">-</div></div>
         <div class="result-row"><div class="muted">Procena ROI</div><div id="roiDisplay">-</div></div>
+        <div class="result-row"><div class="muted">Odnos zaliha i prihoda</div><div id="invToRevDisplay">-</div></div>
+        <div class="result-row"><div class="muted">Procena mrtve zalihe</div><div id="deadStockDisplay">-</div></div>
+        <div class="result-row"><div class="muted">Signal za prekomerne zalihe</div><div id="overstockSignalDisplay">-</div></div>
+        <div class="result-row"><div class="muted">OOS signal</div><div id="oosSignalDisplay">-</div></div>
+        <div class="result-row"><div class="muted">Iskorišćenost zaliha</div><div id="inventoryUtilDisplay">-</div></div>
+        
         <div style="margin-top:8px;" class="small">Rezultati se ažuriraju dok menjate polja. Pre slanja, vrednosti će biti uključene u poruci.</div>
       </div>
 
       <!-- Hidden values that will be sent to backend -->
       <input type="hidden" name="_next" id="_next" value="https://ai1team.com/thankyou.html">
+      <input type="hidden" name="healthScore" id="healthScore">
+      <input type="hidden" name="healthBand" id="healthBand">
       <input type="hidden" name="estimatedSavings" id="estimatedSavings">
       <input type="hidden" name="monthlyFee" id="monthlyFee">
       <input type="hidden" name="annualFee" id="annualFee">
       <input type="hidden" name="roiPercent" id="roiPercent">
+      <input type="hidden" name="roiEuro" id="roiEuro">
+      <input type="hidden" name="inventoryToRevenue" id="inventoryToRevenue">
+      <input type="hidden" name="deadStock" id="deadStock">
+      <input type="hidden" name="overstockSignal" id="overstockSignal">
+      <input type="hidden" name="oosSignal" id="oosSignal">
+      <input type="hidden" name="inventoryUtilization" id="inventoryUtilization">
+      <input type="hidden" name="strategyCall" id="strategyCall" value="Requested">
+      <input type="hidden" name="poc" id="poc" value="Interested">
       <input type="hidden" name="note" id="note">
 
       <div style="margin-top:16px;">
@@ -135,8 +183,8 @@
   </div>
 
   <footer>
-    AI1team © 2025 — Beograd · <a href="mailto:ninasaramia@gmail.com">ninasaramia@gmail.com</a><br>
-    <img src="aiteam-logo.png" alt="AI1team" style="height:45px;">
+    AI1team © 2025 — Beograd · <a href="mailto:roi@ai1team.com">roi@ai1team.com</a><br>
+    <img src="ai1team-logo.png" alt="AI1team" style="height:45px;">
   </footer>
 
   <script>
@@ -149,36 +197,132 @@ function formatCurrency(value) {
   return value.toLocaleString('de-DE');
 }
 
+function num(v) {
+  return isNaN(+v) ? 0 : +v;
+}
+
+// ---------- Health Score Calculation ----------
+function calcHealth({rev, inv, over, oos, cogs, mkt, logi, ops}) {
+  const invToRev = rev > 0 ? inv / rev : 0;
+  let score = 100;
+
+  // Deduct based on inventory-to-revenue ratio
+  score -= Math.min(40, invToRev * 140);
+  
+  // Deduct based on overstock
+  score -= Math.min(20, over * 0.9);
+  
+  // Deduct based on out-of-stock
+  score -= Math.min(15, oos * 1.0);
+
+  // Deduct based on total costs
+  const totalCost = cogs + mkt + logi + ops;
+  if (totalCost > 85) score -= 10;
+  if (totalCost > 95) score -= 8;
+
+  score = Math.max(1, Math.min(99, Math.round(score)));
+
+  let band = 'MID', css = 'health-mid', hint = 'Stabilno — postoji prostor za rast';
+
+  if (score >= 76) { 
+    band = 'HIGH'; 
+    css = 'health-good'; 
+    hint = 'Zdravo: kapital radi efikasno'; 
+  } else if (score <= 50) { 
+    band = 'LOW'; 
+    css = 'health-bad'; 
+    hint = 'Rizik: kapital blokiran'; 
+  }
+
+  return {score, band, css, hint, invToRev};
+}
+
+// ---------- Compute all values ----------
 function computeValues() {
   const annualRevenue = cleanNumber(document.getElementById('annualRevenue').value);
   const inventoryValue = cleanNumber(document.getElementById('inventoryValue').value);
   const overstockPct = parseFloat(document.getElementById('overstockPct').value) || 0;
   const oosPct = parseFloat(document.getElementById('oosPct').value) || 0;
+  const cogsPct = parseFloat(document.getElementById('cogsPct').value) || 0;
+  const marketingPct = parseFloat(document.getElementById('marketingPct').value) || 0;
+  const logisticsPct = parseFloat(document.getElementById('logisticsPct').value) || 0;
+  const operationsPct = parseFloat(document.getElementById('operationsPct').value) || 0;
   const sku = parseFloat(document.getElementById('sku').value) || 0;
   const warehouses = parseFloat(document.getElementById('warehouses').value) || 0;
   const channels = parseFloat(document.getElementById('channels').value) || 0;
 
+  // Calculate Health Score
+  const healthData = calcHealth({
+    rev: annualRevenue,
+    inv: inventoryValue,
+    over: overstockPct,
+    oos: oosPct,
+    cogs: cogsPct,
+    mkt: marketingPct,
+    logi: logisticsPct,
+    ops: operationsPct
+  });
+
+  // Calculate AI Savings
   const overstockLoss = inventoryValue * (overstockPct / 100);
   const oosLoss = annualRevenue * (oosPct / 100);
   const aiSavings = (overstockLoss * 0.30) + (oosLoss * 0.40);
 
+  // Calculate Fees
   let fee = 1000 + (300 * warehouses) + (200 * channels) + (150 * (sku / 1000));
   if (fee < 3000) fee = 3000;
 
   const monthlyFee = Math.round(fee);
   const annualFee = Math.round(fee * 12);
-  const roi = (aiSavings - annualFee) / annualFee;
+  const roiEuro = aiSavings - annualFee;
+  const roi = roiEuro / annualFee;
   const roiPercent = isFinite(roi) ? Math.round(roi * 10000) / 100 : null;
 
-  return { aiSavings: Math.round(aiSavings), monthlyFee, annualFee, roiPercent };
+  // Additional metrics
+  const invToRev = (healthData.invToRev * 100).toFixed(1);
+  const deadStock = Math.round(inventoryValue * (overstockPct / 100) * 0.25); // Estimate 25% of overstock as dead
+  const overstockSignal = overstockPct > 12 ? 'Visok' : overstockPct > 8 ? 'Umeren' : 'Nizak';
+  const oosSignal = oosPct > 7 ? 'Visok' : oosPct > 4 ? 'Umeren' : 'Nizak';
+  const inventoryUtil = Math.round((1 - (overstockPct / 100)) * 100);
+
+  return { 
+    healthScore: healthData.score,
+    healthBand: healthData.band,
+    healthCss: healthData.css,
+    healthHint: healthData.hint,
+    aiSavings: Math.round(aiSavings), 
+    monthlyFee, 
+    annualFee, 
+    roiPercent,
+    roiEuro: Math.round(roiEuro),
+    invToRev,
+    deadStock,
+    overstockSignal,
+    oosSignal,
+    inventoryUtil
+  };
 }
 
 function updateLiveDisplay() {
   const vals = computeValues();
+  
+  // Display Health Score
+  document.getElementById('healthScoreDisplay').innerHTML = `
+    <div class="health-score-badge ${vals.healthCss}">
+      Health Score: ${vals.healthScore}/100 — ${vals.healthBand}
+    </div>
+    <div class="health-hint">${vals.healthHint}</div>
+  `;
+  
   document.getElementById('aiSavingsDisplay').textContent = formatCurrency(vals.aiSavings) + ' €';
   document.getElementById('monthlyFeeDisplay').textContent = formatCurrency(vals.monthlyFee) + ' €';
   document.getElementById('annualFeeDisplay').textContent = formatCurrency(vals.annualFee) + ' €';
   document.getElementById('roiDisplay').textContent = vals.roiPercent !== null ? vals.roiPercent + ' %' : '-';
+  document.getElementById('invToRevDisplay').textContent = vals.invToRev + ' %';
+  document.getElementById('deadStockDisplay').textContent = formatCurrency(vals.deadStock) + ' €';
+  document.getElementById('overstockSignalDisplay').textContent = vals.overstockSignal;
+  document.getElementById('oosSignalDisplay').textContent = vals.oosSignal;
+  document.getElementById('inventoryUtilDisplay').textContent = vals.inventoryUtil + ' %';
 }
 
 // Currency input formatting
@@ -197,7 +341,7 @@ function updateLiveDisplay() {
   });
 });
 
-const inputs = ['overstockPct','oosPct','sku','warehouses','channels','accuracy'];
+const inputs = ['overstockPct','oosPct','cogsPct','marketingPct','logisticsPct','operationsPct','sku','warehouses','channels','accuracy'];
 inputs.forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', updateLiveDisplay);
@@ -207,20 +351,36 @@ updateLiveDisplay();
 // ---------- Submission logic ----------
 function collectFormValues() {
   const vals = computeValues();
+  
+  // Set hidden fields
+  document.getElementById('healthScore').value = vals.healthScore;
+  document.getElementById('healthBand').value = vals.healthBand;
   document.getElementById('estimatedSavings').value = vals.aiSavings;
   document.getElementById('monthlyFee').value = vals.monthlyFee;
   document.getElementById('annualFee').value = vals.annualFee;
   document.getElementById('roiPercent').value = vals.roiPercent || '';
-  document.getElementById('note').value = 'Computed using AI1team formula: 30% overstock recapture; 40% OOS recapture; base fees applied';
+  document.getElementById('roiEuro').value = vals.roiEuro;
+  document.getElementById('inventoryToRevenue').value = vals.invToRev + '%';
+  document.getElementById('deadStock').value = vals.deadStock;
+  document.getElementById('overstockSignal').value = vals.overstockSignal;
+  document.getElementById('oosSignal').value = vals.oosSignal;
+  document.getElementById('inventoryUtilization').value = vals.inventoryUtil + '%';
+  document.getElementById('note').value = 'AI1team ROI+ Calculator: Health Score computed with inventory optimization analysis';
 
   return {
     company: document.getElementById('company').value.trim(),
     contact: document.getElementById('contact').value.trim(),
     email: document.getElementById('email').value.trim(),
+    healthScore: vals.healthScore + '/100',
+    healthBand: vals.healthBand,
     annualRevenue: document.getElementById('annualRevenue').value + ' €',
     inventoryValue: document.getElementById('inventoryValue').value + ' €',
     overstockPct: document.getElementById('overstockPct').value + ' %',
     oosPct: document.getElementById('oosPct').value + ' %',
+    cogsPct: document.getElementById('cogsPct').value + ' %',
+    marketingPct: document.getElementById('marketingPct').value + ' %',
+    logisticsPct: document.getElementById('logisticsPct').value + ' %',
+    operationsPct: document.getElementById('operationsPct').value + ' %',
     sku: formatCurrency(parseFloat(document.getElementById('sku').value) || 0),
     warehouses: formatCurrency(parseFloat(document.getElementById('warehouses').value) || 0),
     channels: formatCurrency(parseFloat(document.getElementById('channels').value) || 0),
@@ -229,6 +389,14 @@ function collectFormValues() {
     monthlyFee: formatCurrency(vals.monthlyFee) + ' €',
     annualFee: formatCurrency(vals.annualFee) + ' €',
     roiPercent: vals.roiPercent !== null ? vals.roiPercent + ' %' : '-',
+    roiEuro: formatCurrency(vals.roiEuro) + ' €',
+    inventoryToRevenue: vals.invToRev + ' %',
+    deadStock: formatCurrency(vals.deadStock) + ' €',
+    overstockSignal: vals.overstockSignal,
+    oosSignal: vals.oosSignal,
+    inventoryUtilization: vals.inventoryUtil + ' %',
+    strategyCall: 'Requested',
+    poc: 'Interested',
     note: document.getElementById('note').value
   };
 }
@@ -248,7 +416,7 @@ async function submitToBackend(e) {
   submitBtn.textContent = 'Šalje se...';
 
   try {
-    const resp = await fetch('https://formspree.io/f/xpwowped', {
+    const resp = await fetch('https://formspree.io/f/mblqlabn', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(data)
@@ -267,8 +435,6 @@ async function submitToBackend(e) {
   }
 }
 </script>
-
-
 
 </body>
 </html>
